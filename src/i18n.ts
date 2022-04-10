@@ -15,6 +15,7 @@ const resources = {
       copy: "Copied results to clipboard",
       showCountry: "🗺️ Show map!",
       cancelRotation: "🌀 Cancel rotation",
+      newGame: "🔀 New game",
       settings: {
         title: "Settings",
         distanceUnit: "Unit of distance",
@@ -70,6 +71,7 @@ const resources = {
       copy: "Résultat copié !",
       showCountry: "🗺️ Afficher la carte !",
       cancelRotation: "🌀 Annule la rotation",
+      newGame: "🔀 Nouveau jeu",
       settings: {
         title: "Paramètres",
         distanceUnit: "Unité de distance",
@@ -126,6 +128,7 @@ const resources = {
       copy: "Resultado copiado !",
       showCountry: "🗺️ mostrar mapa !",
       cancelRotation: "🌀 Anular la rotacíon",
+      newGame: "🔀 Nuevo juego",
       settings: {
         title: "Parámetros",
         distanceUnit: "Unidad de distancia",
@@ -158,6 +161,7 @@ const resources = {
       copy: "Emaitzak arbelean kopiatuta !",
       showCountry: "🗺️ Erakutsi mapan !",
       cancelRotation: "🌀 Ezeztatu errotazioa",
+      newGame: "🔀 joko berria",
       settings: {
         title: "Aukerak",
         distanceUnit: "Distantzia unitateak",

@@ -8,7 +8,12 @@ import {
   Country,
   smallCountryLimit,
 } from "../domain/countries";
-import { Guess, loadAllGuesses, saveGuesses } from "../domain/guess";
+import {
+  clearGuessesStorage,
+  Guess,
+  loadAllGuesses,
+  saveGuesses,
+} from "../domain/guess";
 
 const forcedCountries: Record<string, string> = {
   "2022-02-02": "TD",
@@ -31,6 +36,7 @@ export function useTodays(dayString: string): [
     guesses: Guess[];
   },
   (guess: Guess) => void,
+  () => void,
   number,
   number
 ] {
@@ -38,6 +44,14 @@ export function useTodays(dayString: string): [
     country?: Country;
     guesses: Guess[];
   }>({ guesses: [] });
+
+  const clearGuesses = () => {
+    clearGuessesStorage();
+    setTodays({
+      ...todays,
+      guesses: [],
+    });
+  };
 
   const addGuess = useCallback(
     (newGuess: Guess) => {
@@ -71,7 +85,35 @@ export function useTodays(dayString: string): [
     return 1 / (Math.cos(radianAngle) * Math.sqrt(2));
   }, [randomAngle]);
 
-  return [todays, addGuess, randomAngle, imageScale];
+  return [todays, addGuess, clearGuesses, randomAngle, imageScale];
+}
+
+function pickRandomCountry() {
+  const countrySelection = [
+    ...countriesWithImage,
+    ...bigEnoughCountriesWithImage,
+  ];
+  return countrySelection[
+    Math.floor(
+      seedrandom.alea(DateTime.now().toFormat("yyyy-MM-dd HH:mm:ss.SSS"))() *
+        countrySelection.length
+    )
+  ];
+}
+
+export function useGetCountry() {
+  const [country, setCountry] = useState<Country>(pickRandomCountry());
+  const generateNewCountry = () => {
+    const newCountry = pickRandomCountry();
+    setCountry(newCountry);
+    localStorage.setItem("country", JSON.stringify(newCountry));
+  };
+  const storedCountry = localStorage.getItem("country");
+  if (storedCountry) {
+    return [JSON.parse(storedCountry), generateNewCountry];
+  }
+  localStorage.setItem("country", JSON.stringify(country));
+  return [country, generateNewCountry];
 }
 
 function getCountry(dayString: string) {

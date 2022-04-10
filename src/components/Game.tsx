@@ -9,6 +9,7 @@ import React, {
 import { toast } from "react-toastify";
 import {
   countries,
+  Country,
   getCountryName,
   sanitizeCountryName,
 } from "../domain/countries";
@@ -27,9 +28,16 @@ const MAX_TRY_COUNT = 6;
 interface GameProps {
   settingsData: SettingsData;
   updateSettings: (newSettings: Partial<SettingsData>) => void;
+  country: Country;
+  generateNewCountry: () => void;
 }
 
-export function Game({ settingsData, updateSettings }: GameProps) {
+export function Game({
+  settingsData,
+  updateSettings,
+  country,
+  generateNewCountry,
+}: GameProps) {
   const { t, i18n } = useTranslation();
   const dayString = useMemo(
     () => getDayString(settingsData.shiftDayCount),
@@ -38,8 +46,8 @@ export function Game({ settingsData, updateSettings }: GameProps) {
 
   const countryInputRef = useRef<HTMLInputElement>(null);
 
-  const [todays, addGuess, randomAngle, imageScale] = useTodays(dayString);
-  const { country, guesses } = todays;
+  const [todays, addGuess, clearGuesses, randomAngle, imageScale] = useTodays(dayString);
+  const { guesses } = todays;
   const countryName = useMemo(
     () => (country ? getCountryName(i18n.resolvedLanguage, country) : ""),
     [country, i18n.resolvedLanguage]
@@ -102,7 +110,6 @@ export function Game({ settingsData, updateSettings }: GameProps) {
 
   useEffect(() => {
     let toastId: ReactText;
-    const { country, guesses } = todays;
     if (
       country &&
       guesses.length === MAX_TRY_COUNT &&
@@ -122,7 +129,7 @@ export function Game({ settingsData, updateSettings }: GameProps) {
         toast.dismiss(toastId);
       }
     };
-  }, [todays, i18n.resolvedLanguage]);
+  }, [todays, i18n.resolvedLanguage, guesses, country]);
 
   return (
     <div className="flex-grow flex flex-col mx-2">
@@ -138,6 +145,16 @@ export function Game({ settingsData, updateSettings }: GameProps) {
           />
         </button>
       )}
+      <button
+        className="border-2 uppercase my-2 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-slate-800 dark:active:bg-slate-700"
+        type="button"
+        onClick={() => {
+          generateNewCountry?.();
+          clearGuesses();
+        }}
+      >
+        <Twemoji text={t("newGame")} options={{ className: "inline-block" }} />
+      </button>
       <div className="flex my-1">
         {settingsData.allowShiftingDay && settingsData.shiftDayCount > 0 && (
           <button

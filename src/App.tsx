@@ -12,12 +12,16 @@ import { Stats } from "./components/panels/Stats";
 import { useReactPWAInstall } from "@teuteuf/react-pwa-install";
 import { InstallButton } from "./components/InstallButton";
 import { Twemoji } from "@teuteuf/react-emoji-render";
-import { getDayString, useTodays } from "./hooks/useTodays";
+import { getDayString, useTodays, useGetCountry } from "./hooks/useTodays";
 import {
   LocalStoragePersistenceService,
   ServiceWorkerUpdaterProps,
   withServiceWorkerUpdater,
 } from "@3m1/service-worker-updater";
+import {
+  bigEnoughCountriesWithImage,
+  countriesWithImage,
+} from "./domain/countries";
 
 const supportLink: Record<string, string> = {
   UA: "https://donate.redcrossredcrescent.org/ua/donate/~my-donation?_cv=1",
@@ -29,8 +33,9 @@ function App({
 }: ServiceWorkerUpdaterProps) {
   const { t, i18n } = useTranslation();
 
-  const dayString = useMemo(getDayString, []);
-  const [{ country }] = useTodays(dayString);
+  // const dayString = useMemo(getDayString, []);
+  // const [{ country }] = useTodays(dayString);
+  const [country, generateNewCountry] = useGetCountry();
 
   const { pwaInstall, supported, isInstalled } = useReactPWAInstall();
 
@@ -125,7 +130,12 @@ function App({
               <Twemoji text="⚙️" />
             </button>
           </header>
-          <Game settingsData={settingsData} updateSettings={updateSettings} />
+          <Game
+            settingsData={settingsData}
+            updateSettings={updateSettings}
+            country={country}
+            generateNewCountry={generateNewCountry}
+          />
           <footer className="flex justify-center items-center text-sm mt-8 mb-1">
             <Twemoji
               text="❤️"
