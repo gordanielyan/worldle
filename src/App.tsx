@@ -1,6 +1,6 @@
 import { ToastContainer, Flip, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Game } from "./components/Game";
+import { Game, GameMode } from "./components/Game";
 import React, { useEffect, useMemo, useState } from "react";
 import { Infos } from "./components/panels/Infos";
 import { useTranslation } from "react-i18next";
@@ -12,16 +12,12 @@ import { Stats } from "./components/panels/Stats";
 import { useReactPWAInstall } from "@teuteuf/react-pwa-install";
 import { InstallButton } from "./components/InstallButton";
 import { Twemoji } from "@teuteuf/react-emoji-render";
-import { getDayString, useTodays, useGetCountry } from "./hooks/useTodays";
+import { getDayString, useCurrent } from "./hooks/useTodays";
 import {
   LocalStoragePersistenceService,
   ServiceWorkerUpdaterProps,
   withServiceWorkerUpdater,
 } from "@3m1/service-worker-updater";
-import {
-  bigEnoughCountriesWithImage,
-  countriesWithImage,
-} from "./domain/countries";
 
 const supportLink: Record<string, string> = {
   UA: "https://donate.redcrossredcrescent.org/ua/donate/~my-donation?_cv=1",
@@ -32,10 +28,18 @@ function App({
   onLoadNewServiceWorkerAccept,
 }: ServiceWorkerUpdaterProps) {
   const { t, i18n } = useTranslation();
+  const [mode, setMode] = useState<GameMode>("daily");
 
-  // const dayString = useMemo(getDayString, []);
-  // const [{ country }] = useTodays(dayString);
-  const [country, generateNewCountry] = useGetCountry();
+  const dayString = useMemo(getDayString, []);
+  const {
+    country,
+    guesses,
+    generateNewCountry,
+    addGuess,
+    clearGuesses,
+    randomAngle,
+    imageScale,
+  } = useCurrent(mode, dayString);
 
   const { pwaInstall, supported, isInstalled } = useReactPWAInstall();
 
@@ -109,6 +113,18 @@ function App({
             >
               <Twemoji text="❓" />
             </button>
+            {mode === "free" && (
+              <button
+                className="mr-3 text-xl"
+                type="button"
+                onClick={() => {
+                  generateNewCountry();
+                  clearGuesses();
+                }}
+              >
+                <Twemoji text="🆕" options={{ className: "inline-block" }} />
+              </button>
+            )}
             {supported() && !isInstalled() && (
               <InstallButton pwaInstall={pwaInstall} />
             )}
@@ -133,8 +149,13 @@ function App({
           <Game
             settingsData={settingsData}
             updateSettings={updateSettings}
+            mode={mode}
+            setMode={setMode}
             country={country}
-            generateNewCountry={generateNewCountry}
+            guesses={guesses}
+            addGuess={addGuess}
+            randomAngle={randomAngle}
+            imageScale={imageScale}
           />
           <footer className="flex justify-center items-center text-sm mt-8 mb-1">
             <Twemoji

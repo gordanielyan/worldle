@@ -9,11 +9,12 @@ import {
   smallCountryLimit,
 } from "../domain/countries";
 import {
-  clearGuessesStorage,
+  clearFreeGuessesStorage,
   Guess,
   loadAllGuesses,
   saveGuesses,
 } from "../domain/guess";
+import { GameMode } from "../components/Game";
 
 const forcedCountries: Record<string, string> = {
   "2022-02-02": "TD",
@@ -30,48 +31,119 @@ export function getDayString(shiftDayCount?: number) {
     .toFormat("yyyy-MM-dd");
 }
 
-export function useTodays(dayString: string): [
-  {
-    country?: Country;
-    guesses: Guess[];
-  },
-  (guess: Guess) => void,
-  () => void,
-  number,
-  number
-] {
-  const [todays, setTodays] = useState<{
-    country?: Country;
-    guesses: Guess[];
-  }>({ guesses: [] });
+export function useCurrent(
+  mode: GameMode,
+  dayString: string
+): {
+  country: Country;
+  guesses: Guess[];
+  generateNewCountry: () => void;
+  addGuess: (guess: Guess) => void;
+  clearGuesses: () => void;
+  randomAngle: number;
+  imageScale: number;
+} {
+  const {
+    country: dailyCountry,
+    guesses: dailyGuesses,
+    addGuess: addDailyGuess,
+    randomAngle: dailyRandomAngle,
+    imageScale: dailyImageScale,
+  } = useTodays(dayString);
 
-  const clearGuesses = () => {
-    clearGuessesStorage();
-    setTodays({
-      ...todays,
-      guesses: [],
-    });
+  const generateNewDailyCountry = useCallback(() => {
+    console.warn("cannot generate new daily country");
+  }, []);
+
+  const clearDailyGuesses = useCallback(() => {
+    console.warn("cannot clear daily guesses");
+  }, []);
+
+  const {
+    country: freeCountry,
+    guesses: freeGuesses,
+    generateNewCountry: generateNewFreeCountry,
+    addGuess: addFreeGuess,
+    clearGuesses: clearFreeGuesses,
+    randomAngle: freeRandomAngle,
+    imageScale: freeImageScale,
+  } = useFreePlay();
+
+  const country = useMemo(
+    () => (mode === "free" ? freeCountry : dailyCountry),
+    [mode, freeCountry, dailyCountry]
+  );
+
+  const guesses = useMemo(
+    () => (mode === "free" ? freeGuesses : dailyGuesses),
+    [mode, freeGuesses, dailyGuesses]
+  );
+
+  const addGuess = useMemo(
+    () => (mode === "free" ? addFreeGuess : addDailyGuess),
+    [mode, addDailyGuess, addFreeGuess]
+  );
+
+  const randomAngle = useMemo(
+    () => (mode === "free" ? freeRandomAngle : dailyRandomAngle),
+    [mode, freeRandomAngle, dailyRandomAngle]
+  );
+
+  const imageScale = useMemo(
+    () => (mode === "free" ? freeImageScale : dailyImageScale),
+    [mode, freeImageScale, dailyImageScale]
+  );
+
+  const generateNewCountry = useMemo(
+    () => (mode === "free" ? generateNewFreeCountry : generateNewDailyCountry),
+    [mode, generateNewFreeCountry, generateNewDailyCountry]
+  );
+
+  const clearGuesses = useMemo(
+    () => (mode === "free" ? clearFreeGuesses : clearDailyGuesses),
+    [mode, clearFreeGuesses, clearDailyGuesses]
+  );
+
+  return {
+    country,
+    guesses,
+    generateNewCountry,
+    addGuess,
+    clearGuesses,
+    randomAngle,
+    imageScale,
   };
+}
+
+export function useTodays(dayString: string): {
+  country: Country;
+  guesses: Guess[];
+  addGuess: (guess: Guess) => void;
+  randomAngle: number;
+  imageScale: number;
+} {
+  const [country, setCountry] = useState<Country>(getCountry(dayString));
+  const [guesses, setGuesses] = useState<Guess[]>(
+    loadAllGuesses()[dayString] ?? []
+  );
 
   const addGuess = useCallback(
     (newGuess: Guess) => {
-      if (todays == null) {
+      if (guesses == null || newGuess == null) {
         return;
       }
 
-      const newGuesses = [...todays.guesses, newGuess];
+      const newGuesses = [...guesses, newGuess];
 
-      setTodays((prev) => ({ country: prev.country, guesses: newGuesses }));
+      setGuesses(newGuesses);
       saveGuesses(dayString, newGuesses);
     },
-    [dayString, todays]
+    [dayString, guesses]
   );
 
   useEffect(() => {
-    const guesses = loadAllGuesses()[dayString] ?? [];
-    const country = getCountry(dayString);
-
-    setTodays({ country, guesses });
+    setCountry(getCountry(dayString));
+    setGuesses(loadAllGuesses()[dayString] ?? []);
   }, [dayString]);
 
   const randomAngle = useMemo(
@@ -85,7 +157,13 @@ export function useTodays(dayString: string): [
     return 1 / (Math.cos(radianAngle) * Math.sqrt(2));
   }, [randomAngle]);
 
-  return [todays, addGuess, clearGuesses, randomAngle, imageScale];
+  return {
+    country,
+    guesses,
+    addGuess,
+    randomAngle,
+    imageScale,
+  };
 }
 
 function pickRandomCountry() {
@@ -101,19 +179,65 @@ function pickRandomCountry() {
   ];
 }
 
-export function useGetCountry() {
-  const [country, setCountry] = useState<Country>(pickRandomCountry());
+export function useFreePlay(): {
+  country: Country;
+  guesses: Guess[];
+  generateNewCountry: () => void;
+  addGuess: (guess: Guess) => void;
+  clearGuesses: () => void;
+  randomAngle: number;
+  imageScale: number;
+} {
+  const storedCountry = localStorage.getItem("country");
+  const [country, setCountry] = useState<Country>(
+    storedCountry ? JSON.parse(storedCountry) : pickRandomCountry()
+  );
+  const [guesses, setGuesses] = useState<Guess[]>(
+    storedCountry ? loadAllGuesses()["free"] ?? [] : []
+  );
+
+  if (!storedCountry) {
+    localStorage.setItem("country", JSON.stringify(country));
+  }
+
   const generateNewCountry = () => {
     const newCountry = pickRandomCountry();
-    setCountry(newCountry);
     localStorage.setItem("country", JSON.stringify(newCountry));
+    setCountry(newCountry);
   };
-  const storedCountry = localStorage.getItem("country");
-  if (storedCountry) {
-    return [JSON.parse(storedCountry), generateNewCountry];
-  }
-  localStorage.setItem("country", JSON.stringify(country));
-  return [country, generateNewCountry];
+
+  const clearGuesses = () => {
+    clearFreeGuessesStorage();
+    setGuesses([]);
+  };
+
+  const addGuess = (newGuess: Guess) => {
+    if (guesses == null || newGuess == null) {
+      return;
+    }
+
+    const newGuesses = [...guesses, newGuess];
+
+    setGuesses(newGuesses);
+    saveGuesses("free", newGuesses);
+  };
+
+  const randomAngle =
+    seedrandom.alea(DateTime.now().toFormat("yyyy-MM-dd HH:mm:ss.SSS"))() * 360;
+
+  const normalizedAngle = 45 - (randomAngle % 90);
+  const radianAngle = (normalizedAngle * Math.PI) / 180;
+  const imageScale = 1 / (Math.cos(radianAngle) * Math.sqrt(2));
+
+  return {
+    country,
+    guesses,
+    generateNewCountry,
+    addGuess,
+    clearGuesses,
+    randomAngle,
+    imageScale,
+  };
 }
 
 function getCountry(dayString: string) {

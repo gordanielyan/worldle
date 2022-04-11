@@ -22,6 +22,13 @@ export function saveGuesses(dayString: string, guesses: Guess[]): void {
   );
 }
 
-export function clearGuessesStorage(): void {
-  localStorage.setItem("guesses", "{}");
+export function clearFreeGuessesStorage(): void {
+  const allGuesses = loadAllGuesses();
+  localStorage.setItem(
+    "guesses",
+    JSON.stringify({
+      ...allGuesses,
+      free: undefined,
+    })
+  );
 }

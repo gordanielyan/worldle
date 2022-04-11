@@ -20,34 +20,44 @@ import { Guesses } from "./Guesses";
 import { useTranslation } from "react-i18next";
 import { SettingsData } from "../hooks/useSettings";
 import { useMode } from "../hooks/useMode";
-import { getDayString, useTodays } from "../hooks/useTodays";
+import { getDayString } from "../hooks/useTodays";
 import { Twemoji } from "@teuteuf/react-emoji-render";
+import { Guess } from "../domain/guess";
 
 const MAX_TRY_COUNT = 6;
+
+export type GameMode = "free" | "daily";
 
 interface GameProps {
   settingsData: SettingsData;
   updateSettings: (newSettings: Partial<SettingsData>) => void;
   country: Country;
-  generateNewCountry: () => void;
+  mode: GameMode;
+  setMode: (mode: GameMode) => void;
+  guesses: Guess[];
+  addGuess: (guess: Guess) => void;
+  randomAngle: number;
+  imageScale: number;
 }
 
 export function Game({
   settingsData,
   updateSettings,
   country,
-  generateNewCountry,
+  mode,
+  setMode,
+  guesses,
+  addGuess,
+  randomAngle,
+  imageScale,
 }: GameProps) {
   const { t, i18n } = useTranslation();
   const dayString = useMemo(
-    () => getDayString(settingsData.shiftDayCount),
-    [settingsData.shiftDayCount]
+    () => (mode === "free" ? "free" : getDayString(settingsData.shiftDayCount)),
+    [mode, settingsData.shiftDayCount]
   );
 
   const countryInputRef = useRef<HTMLInputElement>(null);
-
-  const [todays, addGuess, clearGuesses, randomAngle, imageScale] = useTodays(dayString);
-  const { guesses } = todays;
   const countryName = useMemo(
     () => (country ? getCountryName(i18n.resolvedLanguage, country) : ""),
     [country, i18n.resolvedLanguage]
@@ -129,7 +139,7 @@ export function Game({
         toast.dismiss(toastId);
       }
     };
-  }, [todays, i18n.resolvedLanguage, guesses, country]);
+  }, [i18n.resolvedLanguage, guesses, country]);
 
   return (
     <div className="flex-grow flex flex-col mx-2">
@@ -149,11 +159,13 @@ export function Game({
         className="border-2 uppercase my-2 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-slate-800 dark:active:bg-slate-700"
         type="button"
         onClick={() => {
-          generateNewCountry?.();
-          clearGuesses();
+          setMode(mode === "free" ? "daily" : "free");
         }}
       >
-        <Twemoji text={t("newGame")} options={{ className: "inline-block" }} />
+        <Twemoji
+          text={t(mode === "free" ? "dailyPuzzle" : "freePlay")}
+          options={{ className: "inline-block" }}
+        />
       </button>
       <div className="flex my-1">
         {settingsData.allowShiftingDay && settingsData.shiftDayCount > 0 && (
