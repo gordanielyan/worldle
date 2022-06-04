@@ -7,7 +7,12 @@ import React, {
   useState,
 } from "react";
 import { toast } from "react-toastify";
-import { getCountryName, sanitizeCountryName } from "../domain/countries";
+import {
+  // countries,
+  Country,
+  getCountryName,
+  sanitizeCountryName,
+} from "../domain/countries";
 import { CountryInput } from "./CountryInput";
 import * as geolib from "geolib";
 import { Share } from "./Share";
@@ -15,32 +20,49 @@ import { Guesses } from "./Guesses";
 import { useTranslation } from "react-i18next";
 import { SettingsData } from "../hooks/useSettings";
 import { useMode } from "../hooks/useMode";
-import { getDayString, useTodays } from "../hooks/useTodays";
+import { getDayString } from "../hooks/useTodays";
 import { Twemoji } from "@teuteuf/react-emoji-render";
 import { countries } from "../domain/countries.position";
 import { useNewsNotifications } from "../hooks/useNewsNotifications";
+import { Guess } from "../domain/guess";
 
 const ENABLE_TWITCH_LINK = false;
 const MAX_TRY_COUNT = 6;
 
+export type GameMode = "free" | "daily";
+
 interface GameProps {
   settingsData: SettingsData;
   updateSettings: (newSettings: Partial<SettingsData>) => void;
+  country: Country;
+  mode: GameMode;
+  setMode: (mode: GameMode) => void;
+  guesses: Guess[];
+  addGuess: (guess: Guess) => void;
+  randomAngle: number;
+  imageScale: number;
 }
 
-export function Game({ settingsData, updateSettings }: GameProps) {
+export function Game({
+  settingsData,
+  updateSettings,
+  country,
+  mode,
+  setMode,
+  guesses,
+  addGuess,
+  randomAngle,
+  imageScale,
+}: GameProps) {
   const { t, i18n } = useTranslation();
   const dayString = useMemo(
-    () => getDayString(settingsData.shiftDayCount),
-    [settingsData.shiftDayCount]
+    () => (mode === "free" ? "free" : getDayString(settingsData.shiftDayCount)),
+    [mode, settingsData.shiftDayCount]
   );
 
   useNewsNotifications(dayString);
 
   const countryInputRef = useRef<HTMLInputElement>(null);
-
-  const [todays, addGuess, randomAngle, imageScale] = useTodays(dayString);
-  const { country, guesses } = todays;
   const countryName = useMemo(
     () => (country ? getCountryName(i18n.resolvedLanguage, country) : ""),
     [country, i18n.resolvedLanguage]
@@ -103,7 +125,6 @@ export function Game({ settingsData, updateSettings }: GameProps) {
 
   useEffect(() => {
     let toastId: ReactText;
-    const { country, guesses } = todays;
     if (
       country &&
       guesses.length === MAX_TRY_COUNT &&
@@ -123,7 +144,7 @@ export function Game({ settingsData, updateSettings }: GameProps) {
         toast.dismiss(toastId);
       }
     };
-  }, [todays, i18n.resolvedLanguage]);
+  }, [i18n.resolvedLanguage, guesses, country]);
 
   return (
     <div className="flex-grow flex flex-col mx-2">
@@ -139,6 +160,18 @@ export function Game({ settingsData, updateSettings }: GameProps) {
           />
         </button>
       )}
+      <button
+        className="border-2 uppercase my-2 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-slate-800 dark:active:bg-slate-700"
+        type="button"
+        onClick={() => {
+          setMode(mode === "free" ? "daily" : "free");
+        }}
+      >
+        <Twemoji
+          text={t(mode === "free" ? "dailyPuzzle" : "freePlay")}
+          options={{ className: "inline-block" }}
+        />
+      </button>
       <div className="flex my-1">
         {settingsData.allowShiftingDay && settingsData.shiftDayCount > 0 && (
           <button

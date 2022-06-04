@@ -15,6 +15,8 @@ export const translations = {
       copy: "Copied results to clipboard",
       showCountry: "🗺️ Show map!",
       cancelRotation: "🌀 Cancel rotation",
+      dailyPuzzle: "📆 Daily puzzle",
+      freePlay: "🆓 Free play",
       settings: {
         title: "Settings",
         distanceUnit: "Unit of distance",
@@ -78,6 +80,8 @@ export const translations = {
       copy: "Résultat copié !",
       showCountry: "🗺️ Afficher la carte !",
       cancelRotation: "🌀 Annule la rotation",
+      dailyPuzzle: "📆 Jeu quotidien",
+      freePlay: "🆓 Libre jeu",
       settings: {
         title: "Paramètres",
         distanceUnit: "Unité de distance",
@@ -140,6 +144,8 @@ export const translations = {
       copy: "Resultado copiado !",
       showCountry: "🗺️ mostrar mapa !",
       cancelRotation: "🌀 Anular la rotacíon",
+      dailyPuzzle: "📆 Juego diario",
+      freePlay: "🆓 Juego libre",
       settings: {
         title: "Parámetros",
         distanceUnit: "Unidad de distancia",
@@ -173,6 +179,8 @@ export const translations = {
       copy: "Emaitzak arbelean kopiatuta !",
       showCountry: "🗺️ Erakutsi mapan !",
       cancelRotation: "🌀 Ezeztatu errotazioa",
+      dailyPuzzle: "📆 Eguneroko jokoa",
+      freePlay: "🆓 Jolas librea",
       settings: {
         title: "Aukerak",
         distanceUnit: "Distantzia unitateak",

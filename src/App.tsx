@@ -1,6 +1,6 @@
 import { ToastContainer, Flip } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Game } from "./components/Game";
+import { Game, GameMode } from "./components/Game";
 import React, { useEffect, useMemo, useState } from "react";
 import { Infos } from "./components/panels/Infos";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,12 @@ import { useSettings } from "./hooks/useSettings";
 import { Worldle } from "./components/Worldle";
 import { Stats } from "./components/panels/Stats";
 import { Twemoji } from "@teuteuf/react-emoji-render";
-import { getDayString, useTodays } from "./hooks/useTodays";
+import { getDayString, useCurrent } from "./hooks/useTodays";
+import {
+  LocalStoragePersistenceService,
+  ServiceWorkerUpdaterProps,
+  withServiceWorkerUpdater,
+} from "@3m1/service-worker-updater";
 
 const supportLink: Record<string, string> = {
   UA: "https://donate.redcrossredcrescent.org/ua/donate/~my-donation?_cv=1",
@@ -20,9 +25,18 @@ const supportLink: Record<string, string> = {
 
 export default function App() {
   const { t, i18n } = useTranslation();
+  const [mode, setMode] = useState<GameMode>("daily");
 
   const dayString = useMemo(getDayString, []);
-  const [{ country }] = useTodays(dayString);
+  const {
+    country,
+    guesses,
+    generateNewCountry,
+    addGuess,
+    clearGuesses,
+    randomAngle,
+    imageScale,
+  } = useCurrent(mode, dayString);
 
   const [infoOpen, setInfoOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -91,6 +105,19 @@ export default function App() {
             >
               <Twemoji text="❓" />
             </button>
+            {mode === "free" && (
+              <button
+                className="mr-3 text-xl"
+                type="button"
+                onClick={() => {
+                  generateNewCountry();
+                  clearGuesses();
+                }}
+              >
+                <Twemoji text="🆕" options={{ className: "inline-block" }} />
+              </button>
+            )}
+
             <h1 className="text-4xl font-bold uppercase tracking-wide text-center my-1 flex-auto">
               Wor<span className="text-green-600">l</span>dle
             </h1>
@@ -109,7 +136,17 @@ export default function App() {
               <Twemoji text="⚙️" />
             </button>
           </header>
-          <Game settingsData={settingsData} updateSettings={updateSettings} />
+          <Game
+            settingsData={settingsData}
+            updateSettings={updateSettings}
+            mode={mode}
+            setMode={setMode}
+            country={country}
+            guesses={guesses}
+            addGuess={addGuess}
+            randomAngle={randomAngle}
+            imageScale={imageScale}
+          />
           <footer className="flex justify-center items-center mt-8 mb-4">
             <Twemoji
               text="❤️"
